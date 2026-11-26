@@ -1,16 +1,33 @@
 <!doctype html>
 <html><body>
 <h1>Skills</h1>
-<div class="ekfjrk ekfa2q">
+<!-- A category tab that is not selected: its rows are mounted but hidden. -->
+<div class="ekfjrk ekfa2q" hidden>
+  <div class="ekfayy ekfg2u">
+    <p class="ekfjq5"><span>Kubernetes</span></p>
+    <a aria-label="Edit Kubernetes skill" data-action="edit" data-dialog="kubernetes"><svg width="24" height="24"></svg></a>
+  </div>
+</div>
+<div class="ekfjrk ekfa2q" id="rows">
   <div class="ekfayy ekfg2u">
     <p class="ekfjq5"><span>TypeScript</span></p><p class="ekfjq5">Kubernetes and TypeScript at Babbage Ltd</p>
     <a aria-label="Edit TypeScript skill" data-action="edit" data-dialog="typescript"><svg width="24" height="24"></svg></a>
   </div>
+</div>
+<div style="height: 3000px"></div>
+<!-- The list is lazy: later rows mount once the page is scrolled to its end. -->
+<template id="more">
   <div class="ekfayy ekfg2u">
     <p class="ekfjq5"><span>Kubernetes</span></p><p class="ekfjq5">3 endorsements</p>
     <a aria-label="Edit Kubernetes skill" data-action="edit" data-dialog="kubernetes"><svg width="24" height="24"></svg></a>
   </div>
-</div>
+</template>
+<script>
+  addEventListener("scroll", () => {
+    if (innerHeight + scrollY < document.documentElement.scrollHeight - 5) return;
+    document.getElementById("rows").append(document.getElementById("more").content);
+  });
+</script>
 <dialog id="kubernetes">
   <h2>Edit skill</h2>
   <button data-action="delete">Delete skill</button>
@@ -23,7 +40,7 @@
 </dialog>
 <dialog id="confirm">
   <p>Delete skill? Are you sure you want to delete this skill?</p>
-  <button data-action="confirm-delete">Delete</button>
+  <button data-action="confirm-delete" data-slow="3000">Delete</button>
 </dialog>
 <script src="/__fixtures/sdui.js"></script>
 </body></html>

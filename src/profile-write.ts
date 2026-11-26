@@ -4,7 +4,7 @@
 // Profile writes go through LinkedIn's own forms, because that is what LinkedIn accepts for member
 // edits. Every write returns before/after. Without `allowWrite` it is a dry run: nothing opens.
 
-import type { Page } from "patchright";
+import type { Locator, Page } from "patchright";
 import type { Education, Li, Position, WriteResult } from "./li.ts";
 import { getProfile, readProfile, type ProfileEntries } from "./profile.ts";
 import { SduiForm } from "./sdui-form.ts";
@@ -26,6 +26,36 @@ const ABOUT_LIMIT = 2600;
 const profileUrl = (publicId: string) => `https://www.linkedin.com/in/${encodeURIComponent(publicId)}/`;
 
 const sameSkill = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+/** Profile reads to try after a delete before saying it failed: Voyager can serve the old profile for a few seconds. */
+const DELETE_CHECKS = 4;
+
+/**
+ * The edit link of one skill on the skills page. Rows have only hashed class names; each one's edit
+ * link is labelled "Edit {skill} skill". The same link is also mounted, hidden, under category tabs
+ * that are not selected, and the list is lazy, so scroll until a visible one turns up.
+ */
+async function skillEditLink(page: Page, name: string): Promise<Locator> {
+  const link = page.getByLabel(`Edit ${name} skill`, { exact: true }).locator("visible=true").first();
+  const rows = page.locator('[aria-label^="Edit "][aria-label$=" skill"]');
+  let loaded = -1;
+  let idle = 0;
+  // Stop once scrolling has added no rows for a few rounds; an empty page gets the full wait to hydrate.
+  for (let round = 0; round < 40 && idle < 4; round++) {
+    if (await link.count()) return link;
+    const count = await rows.count();
+    idle = count > 0 && count === loaded ? idle + 1 : 0;
+    loaded = count;
+    if (count) await rows.last().scrollIntoViewIfNeeded({ timeout: 2_000 }).catch(() => {});
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await page.waitForTimeout(500);
+  }
+  throw new Error(
+    loaded > 0
+      ? `lk: "${name}" is on the profile, but none of the ${loaded} edit links on the skills page is for it`
+      : `lk: the skills page showed no skills to edit (landed on ${page.url()})`,
+  );
+}
 
 /** How to reach and fill one profile section's add/edit form. */
 interface Section<T> {
@@ -83,6 +113,17 @@ export function createProfileWrites({ voyager, queue, newPage, allowWrite }: Pro
     return { applied: true, before, after };
   }
 
+  /**
+   * Deleting gives no usable success signal in the UI; the only honest check is that the entry is
+   * gone. Reads go through the rate-limited queue, which spaces the retries.
+   */
+  async function stillThere(present: () => Promise<boolean>): Promise<boolean> {
+    for (let check = 0; check < DELETE_CHECKS; check++) {
+      if (!(await present())) return false;
+    }
+    return true;
+  }
+
   /** The "Edit intro" form holds the headline and location. */
   const openIntro = (page: Page, publicId: string) => SduiForm.open(page, `${profileUrl(publicId)}edit/intro/`);
 
@@ -131,8 +172,7 @@ export function createProfileWrites({ voyager, queue, newPage, allowWrite }: Pro
       async remove(index: number): Promise<WriteResult<T | null>> {
         const { entry, url, id } = await entryAt(index);
         const result = await write<T | null>(entry, null, async (page) => (await SduiForm.open(page, url)).delete());
-        // Deleting gives no usable success signal in the UI; the only honest check is that the entry is gone.
-        if (result.applied && section.entries(await readProfile(voyager)).ids.includes(id)) {
+        if (result.applied && (await stillThere(async () => section.entries(await readProfile(voyager)).ids.includes(id)))) {
           throw new Error(`lk: the ${section.name} entry at index ${index} is still on the profile; nothing was deleted`);
         }
         return result;
@@ -167,11 +207,10 @@ export function createProfileWrites({ voyager, queue, newPage, allowWrite }: Pro
       if (!name) throw new Error(`lk: "${skill}" is not on the profile`);
       const result = await write(me.skills, me.skills.filter((s) => s !== name), async (page) => {
         await page.goto(`${profileUrl(me.publicId)}details/skills/`, { waitUntil: "domcontentloaded" });
-        // Rows have only hashed class names; each one's edit link is labelled "Edit {skill} skill".
-        await page.getByLabel(`Edit ${name} skill`, { exact: true }).click({ timeout: 15_000 });
+        await (await skillEditLink(page, name)).click({ timeout: 15_000 });
         await (await SduiForm.attach(page)).delete();
       });
-      if (result.applied && (await getProfile(voyager)).skills.includes(name)) {
+      if (result.applied && (await stillThere(async () => (await getProfile(voyager)).skills.includes(name)))) {
         throw new Error(`lk: "${name}" is still on the profile; nothing was deleted`);
       }
       return result;

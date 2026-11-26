@@ -189,6 +189,8 @@ export class SduiForm {
   /**
    * Click the form's Delete button, then confirm in the stacked second dialog. Waiting for that
    * dialog specifically matters: clicking "the delete button" too early hits the form's own again.
+   * LinkedIn sends the delete after the confirming click and closes the dialogs once it is through,
+   * so return only then: the caller closes the page, which would cancel a request still in flight.
    */
   async delete(): Promise<void> {
     const button = this.dialog.getByRole("button", { name: /^delete\b/i }).first();
@@ -198,9 +200,13 @@ export class SduiForm {
     }
     await button.click();
     const confirm = this.page.locator(DIALOG).filter({ hasText: /cannot be undone|are you sure|delete .*\?/i }).last();
-    await confirm.waitFor({ state: "visible", timeout: 15_000 });
-    await confirm.getByRole("button", { name: /^delete\b/i }).last().click();
-    await this.page.waitForTimeout(2_500);
+    await confirm.waitFor({ state: "visible", timeout: 15_000 }).catch(() => {
+      throw new Error("lk: LinkedIn did not ask to confirm the delete; nothing was deleted");
+    });
+    await confirm.getByRole("button", { name: /^delete\b/i }).last().click({ timeout: 10_000 });
+    // A dialog that never closes is not proof of failure; the caller's re-read of the profile decides.
+    await this.page.locator(DIALOG).first().waitFor({ state: "hidden", timeout: 20_000 }).catch(() => {});
+    await this.page.waitForTimeout(1_000);
   }
 
   /** True when a labelled field is present and empty. */

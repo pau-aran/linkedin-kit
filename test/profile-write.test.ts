@@ -203,25 +203,53 @@ test("adding a skill that is already there is refused", async () => {
   await expect(createProfileWrites(dryRunDeps()).addSkill("kubernetes")).rejects.toThrow(/already on the profile/);
 });
 
+/** A Voyager that keeps listing Kubernetes until the form has deleted it, plus `staleReads` reads after that. */
+function voyagerAfterDelete(staleReads = 0): Voyager {
+  const withoutSkill = {
+    ...dashProfile,
+    included: dashProfile.included.filter((e) => e.name !== "Kubernetes"),
+  };
+  const voyager = fixtureVoyager();
+  let stale = staleReads;
+  return {
+    get: async (path, query) =>
+      path === "/identity/dash/profiles" && browser.deleted.length && stale-- <= 0
+        ? withoutSkill
+        : voyager.get(path, query),
+  };
+}
+
 test(
-  "removeSkill deletes through the skill's own edit link, then checks it is gone",
+  "removeSkill finds the skill's edit link in a lazy list, waits for the delete, then checks it is gone",
   async () => {
     browser.deleted.length = 0;
-    const withoutSkill = {
-      ...dashProfile,
-      included: dashProfile.included.filter((e) => e.name !== "Kubernetes"),
-    };
-    const voyager = fixtureVoyager();
-    const afterDelete: Voyager = {
-      get: async (path, query) =>
-        path === "/identity/dash/profiles" && browser.deleted.length ? withoutSkill : voyager.get(path, query),
-    };
-    expect(await live(afterDelete).removeSkill("Kubernetes")).toEqual({
+    expect(await live(voyagerAfterDelete()).removeSkill("Kubernetes")).toEqual({
       applied: true,
       before: ["Kubernetes", "TypeScript"],
       after: ["TypeScript"],
     });
     expect(browser.deleted).toEqual(["kubernetes"]);
+  },
+  BROWSER_TIMEOUT,
+);
+
+test(
+  "removeSkill accepts a profile read that lags behind the delete",
+  async () => {
+    browser.deleted.length = 0;
+    expect((await live(voyagerAfterDelete(2)).removeSkill("kubernetes")).applied).toBe(true);
+    expect(browser.deleted).toEqual(["kubernetes"]);
+  },
+  BROWSER_TIMEOUT,
+);
+
+test(
+  "removeSkill fails when the skill stays on the profile",
+  async () => {
+    browser.deleted.length = 0;
+    // Not `expect().rejects`: Bun polls the pending promise hard enough to slow the browser fivefold.
+    const error = await live(voyagerAfterDelete(Infinity)).removeSkill("Kubernetes").catch((e: Error) => e);
+    expect(String(error)).toMatch(/still on the profile/);
   },
   BROWSER_TIMEOUT,
 );

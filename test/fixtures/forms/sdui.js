@@ -43,6 +43,8 @@ document.addEventListener("click", async (event) => {
   }
   if (action === "delete") document.getElementById("confirm").showModal();
   if (action === "confirm-delete") {
+    // LinkedIn can take seconds to send the delete; the dialogs stay open until it has.
+    if (button.dataset.slow) await new Promise((done) => setTimeout(done, Number(button.dataset.slow)));
     await fetch("/__delete", { method: "POST", body: editing });
     for (const d of document.querySelectorAll("dialog")) d.close();
   }
