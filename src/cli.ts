@@ -1,5 +1,10 @@
 #!/usr/bin/env bun
 
+import { Console } from "node:console";
+import { parseArgs } from "node:util";
+import { createLi } from "./client.ts";
+import { runLiScript } from "./run.ts";
+
 const usage = `lk - LinkedIn from the terminal
 
 Usage:
@@ -9,15 +14,53 @@ Usage:
   lk run <file|->      run a script with \`li\` in scope; --write allows profile writes
 `;
 
-const [command] = process.argv.slice(2);
+const [command, ...args] = process.argv.slice(2);
 
-switch (command) {
-  case undefined:
-  case "help":
-  case "--help":
-    console.log(usage);
-    break;
-  default:
-    console.error(`lk: unknown command "${command}"\n\n${usage}`);
-    process.exit(2);
+try {
+  switch (command) {
+    case undefined:
+    case "help":
+    case "--help":
+      console.log(usage);
+      break;
+    case "api":
+      process.stdout.write(await Bun.file(new URL("./li.ts", import.meta.url)).text());
+      break;
+    case "run": {
+      const { values, positionals } = parseArgs({
+        args,
+        options: { write: { type: "boolean", default: false } },
+        allowPositionals: true,
+      });
+      const [file] = positionals;
+      if (!file || positionals.length !== 1) {
+        console.error("Usage: lk run <file|-> [--write]");
+        process.exitCode = 2;
+        break;
+      }
+      // Bun's console.write is separate from Node's Console methods.
+      Object.assign(console, new Console(process.stderr), {
+        write: (...data: Parameters<typeof console.write>) => Bun.write(Bun.stderr, Bun.concatArrayBuffers(data.map((chunk) => {
+          if (typeof chunk === "string") return Buffer.from(chunk);
+          if (chunk instanceof ArrayBuffer) return chunk;
+          return Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength);
+        }))),
+      });
+      const source = await (file === "-" ? Bun.stdin : Bun.file(file)).text();
+      const result = await runLiScript(source, { allowWrite: values.write }, createLi);
+      if (!result.ok) {
+        console.error(result.error);
+        process.exitCode = 1;
+        break;
+      }
+      process.stdout.write(`${JSON.stringify(result.value) ?? "null"}\n`);
+      break;
+    }
+    default:
+      console.error(`lk: unknown command "${command}"\n\n${usage}`);
+      process.exit(2);
+  }
+} catch (error) {
+  console.error(error);
+  process.exitCode = 1;
 }
