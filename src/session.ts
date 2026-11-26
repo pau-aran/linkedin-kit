@@ -1,6 +1,6 @@
 // One browser session at a time, and one sequential, rate-limited queue for every LinkedIn call.
 
-import { closeSync, mkdirSync, openSync, readFileSync, unlinkSync, writeSync } from "node:fs";
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, unlinkSync, writeFileSync, writeSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { chromium, type BrowserContext } from "patchright";
@@ -9,6 +9,11 @@ import { createVoyager, getMe } from "./voyager.ts";
 export const STATE_DIR = join(homedir(), ".linkedin-kit");
 const PROFILE_DIR = join(STATE_DIR, "browser");
 const LOCK_FILE = join(STATE_DIR, "session.lock");
+/**
+ * Chromium writes cookies to disk in batches, so cookies set just before the browser
+ * closes (such as `li_at` at the end of sign-in) can be lost. `lk login` saves them here.
+ */
+const COOKIES_FILE = join(STATE_DIR, "cookies.json");
 
 /** Minimum gap between two LinkedIn calls. */
 const MIN_INTERVAL_MS = 1500;
@@ -75,6 +80,7 @@ export async function openSession(options: { headless: boolean }): Promise<Sessi
       headless: options.headless,
       viewport: null,
     });
+    if (existsSync(COOKIES_FILE)) await context.addCookies(JSON.parse(readFileSync(COOKIES_FILE, "utf8")));
     const page = context.pages()[0] ?? (await context.newPage());
     return {
       context,
@@ -99,6 +105,9 @@ export async function login(): Promise<void> {
     await page.goto("https://www.linkedin.com/login");
     console.log("Sign in to LinkedIn in the browser window. Waiting up to 5 minutes...");
     await page.waitForURL(/linkedin\.com\/feed/, { timeout: 5 * 60_000 });
+    const cookies = await session.context.cookies("https://www.linkedin.com");
+    if (!cookies.some((c) => c.name === "li_at")) throw new Error("lk: reached the feed but LinkedIn set no li_at cookie");
+    writeFileSync(COOKIES_FILE, JSON.stringify(cookies), { mode: 0o600 });
     console.log(`Signed in. Session saved in ${PROFILE_DIR}`);
   } finally {
     await session.close();
