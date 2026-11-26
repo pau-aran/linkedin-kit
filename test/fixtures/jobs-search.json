@@ -1,0 +1,24 @@
+{
+  "data": {
+    "paging": { "start": 0, "count": 25, "total": 27 },
+    "elements": [
+      { "jobCardUnion": { "*jobPostingCard": "urn:li:fsd_jobPostingCard:(42,JOBS_SEARCH)" } },
+      { "jobCardUnion": { "jobCollectionCard": {} } }
+    ]
+  },
+  "included": [
+    {
+      "entityUrn": "urn:li:fsd_jobPostingCard:(99,JOBS_SEARCH)",
+      "jobPostingUrn": "urn:li:fsd_jobPosting:99",
+      "title": { "text": "Not in the result list" }
+    },
+    {
+      "entityUrn": "urn:li:fsd_jobPostingCard:(42,JOBS_SEARCH)",
+      "jobPostingUrn": "urn:li:fsd_jobPosting:42",
+      "title": { "text": "Platform engineer" },
+      "primaryDescription": { "text": "Babbage Ltd" },
+      "secondaryDescription": { "text": "Spain (Remote)" },
+      "footerItems": [{ "type": "LISTED_DATE", "timeAt": 1704067200000 }]
+    }
+  ]
+}

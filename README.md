@@ -4,7 +4,7 @@ Terminal + agent toolkit to edit a LinkedIn profile and search for jobs.
 
 The kit gives an agent a typed `li` client for LinkedIn. The agent writes a short TypeScript script against that client, and the `lk` CLI runs it. One script can search jobs, fetch their details in parallel, filter them, and return only what matters, so the agent's context stays small.
 
-The code-mode runner is implemented, but the live LinkedIn client is still a stub. [`PLAN.md`](PLAN.md) has the full plan.
+The code-mode runner supports reading your own profile, searching jobs, reading job details, and listing saved jobs. Profile writes are not implemented yet. [`PLAN.md`](PLAN.md) has the full plan.
 
 ## What it will do
 
@@ -19,7 +19,7 @@ Applying to jobs and an MCP server are out of scope for the first version.
 
 The agent does not call one tool for each action. It reads the `li` API with `lk api`, writes a script, and runs it with `lk run`. The result comes back as JSON. This works with any agent that has a shell, for example pi, Claude Code, or Codex.
 
-The agent does the comparison between your profile and a job itself. A skill file tells it how to write scripts, how to compare, and which rate limits to respect. The kit only supplies the data.
+The agent does the comparison between your profile and a job itself. The [LinkedIn skill](skills/linkedin/SKILL.md) tells it how to write scripts, compare a job with a profile, and keep request volume low. The kit only supplies the data.
 
 ## Setup
 
