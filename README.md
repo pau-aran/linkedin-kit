@@ -1,22 +1,19 @@
 # linkedin-kit
 
-Terminal + agent toolkit to edit a LinkedIn profile and search for jobs.
-
 The `lk` CLI runs short TypeScript scripts with a typed `li` client and returns JSON.
 
 ## What it does
 
-- Read your own profile, including headline, about, location, experience, education, and skills.
-- Update your headline, about, and location; add, edit, or remove experience and education entries; add or remove skills.
+- Read and edit your LinkedIn profile, including your headline, About section, location, experience, education, and skills.
 - Search jobs, read job details, and list saved jobs.
 
 The kit does not apply to jobs or run an MCP server.
 
 ## Use with an agent
 
-Give any agent with shell access the [LinkedIn skill](skills/linkedin/SKILL.md) and the scripts in [examples/](examples/). The agent reads the API with `lk api`, writes a script, and runs it with `lk run`. The kit supplies the data; the agent compares jobs with your profile.
+Give any agent with shell access the [LinkedIn skill](skills/linkedin/SKILL.md) and the scripts in [examples/](examples/). The agent reads the API with `lk api`, writes a script, and runs it with `lk run`. The agent can use the results to compare jobs with your profile.
 
-**Account risk:** Automated access breaks LinkedIn's User Agreement and can get your account restricted. Keep request volume low and avoid bulk actions.
+Automated access breaks LinkedIn's User Agreement. LinkedIn can restrict your account. Keep request volume low and avoid bulk actions.
 
 ## Setup
 
@@ -35,7 +32,7 @@ From a checkout, use `bun src/cli.ts` in place of `lk` in the commands below.
 - `lk status` checks the saved session and shows who is signed in.
 - `lk api` prints the type definitions of the `li` client without opening a browser.
 - `lk run <file>` runs a script with `li` available and prints the result as JSON. `lk run -` reads the script from standard input.
-- `lk run --write <file>` allows profile edits to be submitted. Without `--write`, edits return the current and proposed values without submitting anything.
+- `lk run --write <file>` lets the script submit profile edits. Without `--write`, edit methods only return the current and proposed values.
 
 An `lk run` script is an async function body: use `await` directly and `return`
 a JSON-serializable value. The result goes to stdout (`null` if nothing is
