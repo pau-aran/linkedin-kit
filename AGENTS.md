@@ -1,6 +1,6 @@
 # linkedin-kit
 
-Read `PLAN.md` first. `src/li.ts` is the contract between modules and for agent scripts; change it only when your task needs it, and say so in the PR.
+`src/li.ts` is the contract between modules and for agent scripts; change it only when your task needs it, and say so in the PR.
 
 ## Stack
 
