@@ -13,6 +13,17 @@ const PROFILE_DECORATION = "com.linkedin.voyager.dash.deco.identity.profile.Full
 
 /** My own profile, read from Voyager. */
 export async function getProfile(voyager: Voyager): Promise<Profile> {
+  return (await readProfile(voyager)).profile;
+}
+
+/** My profile plus the LinkedIn id of each experience and education entry, index for index. */
+export interface ProfileEntries {
+  profile: Profile;
+  positionIds: string[];
+  educationIds: string[];
+}
+
+export async function readProfile(voyager: Voyager): Promise<ProfileEntries> {
   const me = await getMe(voyager);
   const graph = new VoyagerGraph(
     await voyager.get("/identity/dash/profiles", {
@@ -25,16 +36,24 @@ export async function getProfile(voyager: Voyager): Promise<Profile> {
   if (!entity) throw new Error(`lk: Voyager returned no profile for ${me.publicId}`);
 
   const geo = graph.resolve(pick(entity, "geoLocation.*geo"));
-  return {
+  const positions = newestFirst(graph.byType("identity.profile.Position"));
+  const educations = newestFirst(graph.byType("identity.profile.Education"));
+  const profile: Profile = {
     publicId: me.publicId,
     name: [pickString(entity, "firstName"), pickString(entity, "lastName")].filter(Boolean).join(" "),
     headline: pickString(entity, "headline") ?? "",
     about: pickString(entity, "summary") ?? "",
     location: pickString(geo, "defaultLocalizedName") ?? pickString(entity, "geoLocationName", "locationName") ?? "",
-    experience: newestFirst(graph.byType("identity.profile.Position").map(decodePosition)),
-    education: newestFirst(graph.byType("identity.profile.Education").map(decodeEducation)),
+    experience: positions.map(decodePosition),
+    education: educations.map(decodeEducation),
     skills: graph.byType("identity.profile.Skill").flatMap((s) => pickString(s, "name") ?? []),
   };
+  return { profile, positionIds: positions.map(entryId), educationIds: educations.map(entryId) };
+}
+
+/** urn:li:fsd_profilePosition:(ACoAA…,1237791306) → "1237791306"; "" when LinkedIn exposes none. */
+function entryId(e: Record<string, unknown>): string {
+  return pickString(e, "entityUrn")?.match(/,\s*(\d+)\)\s*$/)?.[1] ?? "";
 }
 
 function decodePosition(e: Record<string, unknown>): Position {
@@ -60,8 +79,9 @@ function decodeEducation(e: Record<string, unknown>): Education {
 }
 
 /** Voyager does not order `included`; LinkedIn shows entries by start date, newest first. */
-function newestFirst<T extends { start?: string }>(entries: T[]): T[] {
-  return entries.toSorted((a, b) => (b.start ?? "").localeCompare(a.start ?? ""));
+function newestFirst(entities: Record<string, unknown>[]): Record<string, unknown>[] {
+  const start = (e: Record<string, unknown>) => formatLinkedInDate(pick(e, "dateRange.start")) ?? "";
+  return entities.toSorted((a, b) => start(b).localeCompare(start(a)));
 }
 
 /** Drop undefined fields, so optional fields are absent rather than undefined. */
