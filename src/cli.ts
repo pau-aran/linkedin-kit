@@ -4,6 +4,7 @@ import { Console } from "node:console";
 import { parseArgs } from "node:util";
 import { createLi } from "./client.ts";
 import { runLiScript } from "./run.ts";
+import { login } from "./session.ts";
 
 const usage = `lk - LinkedIn from the terminal
 
@@ -22,6 +23,9 @@ try {
     case "help":
     case "--help":
       console.log(usage);
+      break;
+    case "login":
+      await login();
       break;
     case "api":
       process.stdout.write(await Bun.file(new URL("./li.ts", import.meta.url)).text());

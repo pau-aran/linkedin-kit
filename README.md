@@ -21,6 +21,16 @@ The agent does not call one tool for each action. It reads the `li` API with `lk
 
 The agent does the comparison between your profile and a job itself. A skill file tells it how to write scripts, how to compare, and which rate limits to respect. The kit only supplies the data.
 
+## Setup
+
+```sh
+bun install
+bunx patchright install chromium
+bun src/cli.ts login    # sign in once in the browser window that opens
+```
+
+The browser profile lives in `~/.linkedin-kit/browser`. Only one `lk` session runs at a time.
+
 ## Commands
 
 - `lk login` opens a browser so that you can log in to LinkedIn. With `--import-from-browser`, it takes the session from your browser.
