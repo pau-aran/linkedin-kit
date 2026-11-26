@@ -27,6 +27,7 @@ The agent does the comparison between your profile and a job itself. A skill fil
 bun install
 bunx patchright install chromium
 bun src/cli.ts login    # sign in once in the browser window that opens
+bun src/cli.ts status   # check the saved session
 ```
 
 The browser profile lives in `~/.linkedin-kit/browser`. Only one `lk` session runs at a time.

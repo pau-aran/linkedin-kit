@@ -4,6 +4,7 @@ import { closeSync, mkdirSync, openSync, readFileSync, unlinkSync, writeSync } f
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { chromium, type BrowserContext } from "patchright";
+import { createVoyager, getMe } from "./voyager.ts";
 
 export const STATE_DIR = join(homedir(), ".linkedin-kit");
 const PROFILE_DIR = join(STATE_DIR, "browser");
@@ -95,6 +96,17 @@ export async function login(): Promise<void> {
     console.log("Sign in to LinkedIn in the browser window. Waiting up to 5 minutes...");
     await page.waitForURL(/linkedin\.com\/feed/, { timeout: 5 * 60_000 });
     console.log(`Signed in. Session saved in ${PROFILE_DIR}`);
+  } finally {
+    await session.close();
+  }
+}
+
+/** Check the saved session against Voyager `/me` and print who it belongs to. */
+export async function status(): Promise<void> {
+  const session = await openSession({ headless: true });
+  try {
+    const me = await getMe(createVoyager(session.context, session.queue));
+    console.log(`Signed in as ${me.name} (${me.publicId})`);
   } finally {
     await session.close();
   }
