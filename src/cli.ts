@@ -38,14 +38,7 @@ try {
         process.exitCode = 2;
         break;
       }
-      // Bun's console.write is separate from Node's Console methods.
-      Object.assign(console, new Console(process.stderr), {
-        write: (...data: Parameters<typeof console.write>) => Bun.write(Bun.stderr, Bun.concatArrayBuffers(data.map((chunk) => {
-          if (typeof chunk === "string") return Buffer.from(chunk);
-          if (chunk instanceof ArrayBuffer) return chunk;
-          return Buffer.from(chunk.buffer, chunk.byteOffset, chunk.byteLength);
-        }))),
-      });
+      Object.assign(console, new Console(process.stderr));
       const source = await (file === "-" ? Bun.stdin : Bun.file(file)).text();
       const result = await runLiScript(source, { allowWrite: values.write }, createLi);
       if (!result.ok) {
