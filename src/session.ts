@@ -61,7 +61,7 @@ export interface Session {
   context: BrowserContext;
   /** Every LinkedIn call goes through here. */
   queue: <T>(task: () => Promise<T>) => Promise<T>;
-  /** The browser's real user agent, read once at launch. */
+  /** The browser's real user agent, read once at launch, without the headless marker. */
   userAgent: string;
   close(): Promise<void>;
 }
@@ -79,7 +79,7 @@ export async function openSession(options: { headless: boolean }): Promise<Sessi
     return {
       context,
       queue: createQueue(MIN_INTERVAL_MS),
-      userAgent: await page.evaluate(() => navigator.userAgent),
+      userAgent: (await page.evaluate(() => navigator.userAgent)).replace("HeadlessChrome", "Chrome"),
       async close() {
         await context.close();
         release();
