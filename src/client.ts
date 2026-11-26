@@ -1,3 +1,4 @@
+import { createVoyagerJobs } from "./jobs.ts";
 import type { Li } from "./li.ts";
 import { getProfile } from "./profile.ts";
 import { openSession } from "./session.ts";
@@ -35,11 +36,7 @@ export async function createLi(_options: LiOptions): Promise<LiClient> {
       addSkill: notImplemented("profile.addSkill"),
       removeSkill: notImplemented("profile.removeSkill"),
     },
-    jobs: {
-      search: notImplemented("jobs.search"),
-      get: notImplemented("jobs.get"),
-      saved: notImplemented("jobs.saved"),
-    },
+    jobs: createVoyagerJobs(voyager),
     close: () => session.close(),
   };
 }

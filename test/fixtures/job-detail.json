@@ -1,0 +1,16 @@
+{
+  "data": {
+    "entityUrn": "urn:li:fs_normalized_jobPosting:42",
+    "title": "Platform engineer",
+    "description": { "text": "Design and run reliable services.\nExperience with Kubernetes required." },
+    "companyDetails": { "*companyResolutionResult": "urn:li:fs_normalized_company:1" },
+    "formattedLocation": "Spain",
+    "listedAt": 1704067200000,
+    "formattedEmploymentStatus": "Full-time",
+    "formattedExperienceLevel": "Mid-Senior level",
+    "workplaceTypes": ["urn:li:fs_workplaceType:3"],
+    "applies": 7,
+    "skills": ["Kubernetes", { "name": "Incident response" }]
+  },
+  "included": [{ "entityUrn": "urn:li:fs_normalized_company:1", "name": "Babbage Ltd" }]
+}

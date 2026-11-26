@@ -1,0 +1,22 @@
+{
+  "data": {
+    "data": {
+      "searchDashClustersByAll": {
+        "paging": { "start": 0, "count": 10, "total": 1 },
+        "elements": [{
+          "items": [{
+            "item": { "*entityResult": "urn:li:fsd_entityResultViewModel:(urn:li:fsd_jobPosting:77,SEARCH_MY_ITEMS_JOB_SEEKER,DEFAULT)" }
+          }]
+        }]
+      }
+    }
+  },
+  "included": [{
+    "entityUrn": "urn:li:fsd_entityResultViewModel:(urn:li:fsd_jobPosting:77,SEARCH_MY_ITEMS_JOB_SEEKER,DEFAULT)",
+    "trackingUrn": "urn:li:fsd_jobPosting:77",
+    "title": { "text": "Systems engineer" },
+    "primarySubtitle": { "text": "Analytical Engines" },
+    "secondarySubtitle": { "text": "Madrid" },
+    "navigationUrl": "https://www.linkedin.com/jobs/view/77/?trackingId=example"
+  }]
+}
