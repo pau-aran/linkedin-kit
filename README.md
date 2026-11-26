@@ -45,7 +45,7 @@ printf 'return (await li.profile.get()).skills;\n' | lk run -
 
 ## Architecture
 
-Bun runs TypeScript directly. `lk status` and `lk run` open headless Chromium in the background using the profile saved in `~/.linkedin-kit/browser`. There is no daemon. Only one session runs at a time, and a rate-limited queue runs LinkedIn operations in order.
+Bun runs TypeScript directly. `lk status` and `lk run` open headless Chromium in the background using the profile saved in `~/.linkedin-kit/browser` and the session cookies `lk login` saved in `~/.linkedin-kit/cookies.json`. There is no daemon. Only one session runs at a time, and a rate-limited queue runs LinkedIn operations in order.
 
 Reads use plain HTTP requests to LinkedIn's internal Voyager JSON API with cookies from the browser session. Profile writes fill and submit LinkedIn's forms in headless Chromium.
 
