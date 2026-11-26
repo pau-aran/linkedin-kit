@@ -82,3 +82,7 @@ flowchart LR
   li -- "writes with --write" --> headless
   headless -- "submit forms" --> linkedin
 ```
+
+## License
+
+[MIT](LICENSE). See [NOTICE](NOTICE) for third-party attributions.
