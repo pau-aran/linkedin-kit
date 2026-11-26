@@ -55,7 +55,7 @@ export class SduiForm {
   }
 
   /** Fill a plain <input> or <textarea> addressed by label. */
-  async text(label: string, value: string): Promise<void> {
+  async text(label: string | RegExp, value: string): Promise<void> {
     const el = await this.required(label);
     await el.click().catch(() => {});
     await el.fill("");
@@ -66,7 +66,7 @@ export class SduiForm {
    * Fill a typeahead and pick a suggestion when one appears. Some typeaheads (Title, Degree) accept
    * free text; others (School, Company) only bind the entry when a suggestion is chosen.
    */
-  async typeahead(label: string, value: string): Promise<void> {
+  async typeahead(label: string | RegExp, value: string): Promise<void> {
     const el = await this.required(label);
     await el.click().catch(() => {});
     await el.fill("");
@@ -222,9 +222,9 @@ export class SduiForm {
     return (await this.page.locator(DIALOG).count()) > 0;
   }
 
-  private async required(label: string): Promise<Locator> {
+  private async required(label: string | RegExp): Promise<Locator> {
     const el = this.field(label).first();
-    if (!(await el.count())) throw new Error(`lk: field "${label}" not found on the form`);
+    if (!(await el.count())) throw new Error(`lk: field "${String(label)}" not found on the form`);
     return el;
   }
 

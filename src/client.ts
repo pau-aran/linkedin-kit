@@ -32,12 +32,6 @@ export async function createLi(options: LiOptions): Promise<LiClient> {
     profile: {
       get: () => getProfile(voyager),
       ...writes,
-      addPosition: notImplemented("profile.addPosition"),
-      editPosition: notImplemented("profile.editPosition"),
-      removePosition: notImplemented("profile.removePosition"),
-      addEducation: notImplemented("profile.addEducation"),
-      editEducation: notImplemented("profile.editEducation"),
-      removeEducation: notImplemented("profile.removeEducation"),
       addSkill: notImplemented("profile.addSkill"),
       removeSkill: notImplemented("profile.removeSkill"),
     },

@@ -1,0 +1,23 @@
+<!doctype html>
+<html><body>
+<dialog open>
+  <h2>Add education</h2>
+  <div data-typeahead><label for="«s»">School*</label><input id="«s»" data-testid="typeahead-input"></div>
+  <div data-typeahead><label for="«d»">Degree</label><input id="«d»" data-testid="typeahead-input"></div>
+  <div data-typeahead><label for="«f»">Field of study</label><input id="«f»" data-testid="typeahead-input"></div>
+  <div aria-label="Start date month"><select data-months></select></div>
+  <div aria-label="Start date year"><select data-years></select></div>
+  <div aria-label="End date (or expected) month"><select data-months></select></div>
+  <div aria-label="End date (or expected) year"><select data-years></select></div>
+  <label for="«g»">Grade</label><input id="«g»">
+  <label for="«ds»">Description</label><textarea id="«ds»"></textarea>
+  <input type="checkbox" id="«n»" checked><label for="«n»">Notify network</label>
+  <button data-action="delete">Delete education</button>
+  <button data-action="save">Save</button>
+</dialog>
+<dialog id="confirm">
+  <p>This cannot be undone.</p>
+  <button data-action="confirm-delete">Delete</button>
+</dialog>
+<script src="/__fixtures/sdui.js"></script>
+</body></html>

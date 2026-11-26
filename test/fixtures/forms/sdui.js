@@ -7,7 +7,7 @@ function labelOf(el) {
 
 function valuesOf(dialog) {
   const out = {};
-  for (const el of dialog.querySelectorAll("input, select, [contenteditable]")) {
+  for (const el of dialog.querySelectorAll("input, select, textarea, [contenteditable]")) {
     if (el.closest("[hidden]")) continue;
     out[labelOf(el)] =
       el.type === "checkbox" ? el.checked
@@ -59,3 +59,13 @@ document.addEventListener("change", (event) => {
   const current = event.target.closest("[data-current]");
   if (current) document.getElementById("end-date").hidden = event.target.checked;
 });
+
+// Date selects: a "Month"/"Year" placeholder, then the choices.
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+for (const select of document.querySelectorAll("select[data-months]")) {
+  for (const label of ["Month", ...MONTHS]) select.add(new Option(label));
+}
+for (const select of document.querySelectorAll("select[data-years]")) {
+  select.add(new Option("Year"));
+  for (let year = 2030; year >= 1990; year--) select.add(new Option(String(year)));
+}

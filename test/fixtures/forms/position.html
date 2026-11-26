@@ -1,0 +1,31 @@
+<!doctype html>
+<html><body>
+<dialog open>
+  <h2>Add experience</h2>
+  <p>* Indicates required</p>
+  <div data-typeahead><label for="«t»">Title*</label><input id="«t»" data-testid="typeahead-input"></div>
+  <label for="«et»">Employment type</label><select id="«et»"><option>Please select</option><option>Full-time</option></select>
+  <div data-typeahead><label for="«c»">Company or organization*</label><input id="«c»" data-testid="typeahead-input"></div>
+  <div aria-label="I am currently working in this role" data-current>
+    <input type="checkbox" id="«cur»" checked><label for="«cur»">I am currently working in this role</label>
+  </div>
+  <div aria-label="Start date month"><select data-months></select></div>
+  <div aria-label="Start date year"><select data-years></select></div>
+  <div id="end-date" hidden>
+    <div aria-label="End date month"><select data-months></select></div>
+    <div aria-label="End date year"><select data-years></select></div>
+  </div>
+  <div data-typeahead><label for="«l»">Location</label><input id="«l»" data-testid="typeahead-input"></div>
+  <label for="«lt»">Location type</label><select id="«lt»"><option>Please select</option><option>Remote</option></select>
+  <div contenteditable="true" role="textbox" aria-label="Description"></div>
+  <input type="checkbox" id="«n»" checked><label for="«n»">Notify network</label>
+  <button data-action="delete">Delete experience</button>
+  <button data-action="save">Save</button>
+</dialog>
+<dialog id="confirm">
+  <p>Are you sure you want to delete this experience? This cannot be undone.</p>
+  <button>Cancel</button>
+  <button data-action="confirm-delete">Delete</button>
+</dialog>
+<script src="/__fixtures/sdui.js"></script>
+</body></html>
