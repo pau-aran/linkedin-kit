@@ -34,7 +34,7 @@ The browser profile lives in `~/.linkedin-kit/browser`. Only one `lk` session ru
 
 ## Commands
 
-- `lk login` opens a browser so that you can log in to LinkedIn. With `--import-from-browser`, it takes the session from your browser.
+- `lk login` opens a browser so that you can log in to LinkedIn.
 - `lk status` shows whether the session is valid.
 - `lk api` prints the type definitions of the `li` client for the agent.
 - `lk run <file>` runs an agent script with `li` available and prints the result as JSON. `lk run -` reads the script from standard input.
