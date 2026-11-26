@@ -1,6 +1,7 @@
 import { createVoyagerJobs } from "./jobs.ts";
 import type { Li } from "./li.ts";
 import { getProfile } from "./profile.ts";
+import { createProfileWrites } from "./profile-write.ts";
 import { openSession } from "./session.ts";
 import { createVoyager } from "./voyager.ts";
 
@@ -18,15 +19,19 @@ const notImplemented = (name: string) => async (): Promise<never> => {
   throw new Error(`li.${name}: not implemented yet`);
 };
 
-export async function createLi(_options: LiOptions): Promise<LiClient> {
+export async function createLi(options: LiOptions): Promise<LiClient> {
   const session = await openSession({ headless: true });
   const voyager = createVoyager(session);
+  const writes = createProfileWrites({
+    voyager,
+    queue: session.queue,
+    newPage: () => session.context.newPage(),
+    allowWrite: options.allowWrite,
+  });
   return {
     profile: {
       get: () => getProfile(voyager),
-      updateHeadline: notImplemented("profile.updateHeadline"),
-      updateAbout: notImplemented("profile.updateAbout"),
-      updateLocation: notImplemented("profile.updateLocation"),
+      ...writes,
       addPosition: notImplemented("profile.addPosition"),
       editPosition: notImplemented("profile.editPosition"),
       removePosition: notImplemented("profile.removePosition"),

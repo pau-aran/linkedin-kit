@@ -5,6 +5,8 @@ linkedin-kit includes code ported from these projects:
   - src/voyager/client.ts, src/auth/session.ts -> src/voyager.ts
   - src/domains/profile.ts -> src/profile.ts
   - src/domains/jobs.ts -> src/jobs.ts
+  - src/browser/sdui-form.ts, src/domains/profile.ts -> src/sdui-form.ts
+  - src/domains/profile.ts -> src/profile-write.ts
 
 MIT License
 
