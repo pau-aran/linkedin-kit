@@ -29,7 +29,7 @@ document.addEventListener("click", async (event) => {
     option.parentElement.remove();
     return;
   }
-  const button = event.target.closest("button");
+  const button = event.target.closest("button, a");
   if (!button) return;
   const dialog = button.closest("dialog");
   const action = button.dataset.action;

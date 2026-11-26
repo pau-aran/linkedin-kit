@@ -25,9 +25,6 @@ const ABOUT_LIMIT = 2600;
 
 const profileUrl = (publicId: string) => `https://www.linkedin.com/in/${encodeURIComponent(publicId)}/`;
 
-/** Rows on a profile details page, from upstream src/browser/selectors.ts (PROFILE.entityRow). */
-const ENTITY_ROW = ["li.artdeco-list__item", ".pvs-list__paged-list-item", "li.pvs-list__item--line-separated"].join(", ");
-
 const sameSkill = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
 /** How to reach and fill one profile section's add/edit form. */
@@ -170,9 +167,8 @@ export function createProfileWrites({ voyager, queue, newPage, allowWrite }: Pro
       if (!name) throw new Error(`lk: "${skill}" is not on the profile`);
       const result = await write(me.skills, me.skills.filter((s) => s !== name), async (page) => {
         await page.goto(`${profileUrl(me.publicId)}details/skills/`, { waitUntil: "domcontentloaded" });
-        // Match the skill's own text exactly: other rows mention skills in their descriptions.
-        const row = page.locator(ENTITY_ROW).filter({ has: page.getByText(name, { exact: true }) }).first();
-        await row.locator('[aria-label*="Edit"]').first().click({ timeout: 15_000 });
+        // Rows have only hashed class names; each one's edit link is labelled "Edit {skill} skill".
+        await page.getByLabel(`Edit ${name} skill`, { exact: true }).click({ timeout: 15_000 });
         await (await SduiForm.attach(page)).delete();
       });
       if (result.applied && (await getProfile(voyager)).skills.includes(name)) {
