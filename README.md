@@ -19,7 +19,7 @@ Applying to jobs and an MCP server are out of scope for the first version.
 
 The agent does not call one tool for each action. It reads the `li` API with `lk api`, writes a script, and runs it with `lk run`. The result comes back as JSON. This works with any agent that has a shell, for example pi, Claude Code, or Codex.
 
-The agent does the comparison between your profile and a job itself. A skill file tells it how to write scripts, how to compare, and which rate limits to respect. The kit only supplies the data.
+The agent does the comparison between your profile and a job itself. The [LinkedIn skill](skills/linkedin/SKILL.md) tells it how to write scripts, compare a job with a profile, and keep request volume low. The kit only supplies the data.
 
 ## Setup
 
