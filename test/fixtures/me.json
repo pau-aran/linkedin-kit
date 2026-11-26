@@ -1,0 +1,20 @@
+{
+  "data": {
+    "$type": "com.linkedin.voyager.common.Me",
+    "plainId": 123456789,
+    "*miniProfile": "urn:li:fs_miniProfile:ACoAAAexample",
+    "premiumSubscriber": false
+  },
+  "included": [
+    {
+      "$type": "com.linkedin.voyager.identity.shared.MiniProfile",
+      "entityUrn": "urn:li:fs_miniProfile:ACoAAAexample",
+      "dashEntityUrn": "urn:li:fsd_profile:ACoAAAexample",
+      "objectUrn": "urn:li:member:123456789",
+      "firstName": "Ada",
+      "lastName": "Lovelace",
+      "occupation": "Platform engineer",
+      "publicIdentifier": "ada-lovelace"
+    }
+  ]
+}
