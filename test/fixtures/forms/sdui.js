@@ -18,6 +18,9 @@ function valuesOf(dialog) {
   return out;
 }
 
+// The dialog an "edit" button opened, so a delete can say which entry it removed.
+let editing = "";
+
 document.addEventListener("click", async (event) => {
   const option = event.target.closest('[role="option"]');
   if (option) {
@@ -34,10 +37,13 @@ document.addEventListener("click", async (event) => {
     await fetch("/__save", { method: "POST", body: JSON.stringify(valuesOf(dialog)) });
     dialog.close();
   }
-  if (action === "edit") document.getElementById(button.dataset.dialog).showModal();
+  if (action === "edit") {
+    editing = button.dataset.dialog;
+    document.getElementById(editing).showModal();
+  }
   if (action === "delete") document.getElementById("confirm").showModal();
   if (action === "confirm-delete") {
-    await fetch("/__delete", { method: "POST" });
+    await fetch("/__delete", { method: "POST", body: editing });
     for (const d of document.querySelectorAll("dialog")) d.close();
   }
 });

@@ -14,7 +14,7 @@ export async function formBrowser(pages: Record<string, string>) {
   const context = await browser.newContext();
   const saves: Record<string, unknown>[] = [];
   const visited: string[] = [];
-  let deletes = 0;
+  const deleted: string[] = [];
   await context.route("https://www.linkedin.com/**", async (route) => {
     const { pathname } = new URL(route.request().url());
     if (pathname === "/__save") {
@@ -22,7 +22,7 @@ export async function formBrowser(pages: Record<string, string>) {
       return route.fulfill({ status: 204 });
     }
     if (pathname === "/__delete") {
-      deletes++;
+      deleted.push(route.request().postData() ?? "");
       return route.fulfill({ status: 204 });
     }
     const file = pathname.startsWith("/__fixtures/") ? pathname.slice("/__fixtures/".length) : pages[pathname];
@@ -33,7 +33,7 @@ export async function formBrowser(pages: Record<string, string>) {
   return {
     saves,
     visited,
-    deletes: () => deletes,
+    deleted,
     newPage: () => context.newPage(),
     close: () => browser.close(),
   };

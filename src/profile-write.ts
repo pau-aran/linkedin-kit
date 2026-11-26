@@ -18,12 +18,17 @@ export interface ProfileWriteDeps {
   allowWrite: boolean;
 }
 
-export type ProfileWrites = Omit<Li["profile"], "get" | "addSkill" | "removeSkill">;
+export type ProfileWrites = Omit<Li["profile"], "get">;
 
 const HEADLINE_LIMIT = 220;
 const ABOUT_LIMIT = 2600;
 
 const profileUrl = (publicId: string) => `https://www.linkedin.com/in/${encodeURIComponent(publicId)}/`;
+
+/** Rows on a profile details page, from upstream src/browser/selectors.ts (PROFILE.entityRow). */
+const ENTITY_ROW = ["li.artdeco-list__item", ".pvs-list__paged-list-item", "li.pvs-list__item--line-separated"].join(", ");
+
+const sameSkill = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
 /** How to reach and fill one profile section's add/edit form. */
 interface Section<T> {
@@ -148,6 +153,33 @@ export function createProfileWrites({ voyager, queue, newPage, allowWrite }: Pro
     addEducation: educations.add,
     editEducation: educations.edit,
     removeEducation: educations.remove,
+
+    async addSkill(skill) {
+      const me = await getProfile(voyager);
+      if (me.skills.some((s) => sameSkill(s, skill))) throw new Error(`lk: "${skill}" is already on the profile`);
+      return write(me.skills, [...me.skills, skill], async (page) => {
+        const form = await SduiForm.open(page, `${profileUrl(me.publicId)}skills/edit/forms/new`);
+        await form.typeahead("Skill", skill);
+        await form.save();
+      });
+    },
+
+    async removeSkill(skill) {
+      const me = await getProfile(voyager);
+      const name = me.skills.find((s) => sameSkill(s, skill));
+      if (!name) throw new Error(`lk: "${skill}" is not on the profile`);
+      const result = await write(me.skills, me.skills.filter((s) => s !== name), async (page) => {
+        await page.goto(`${profileUrl(me.publicId)}details/skills/`, { waitUntil: "domcontentloaded" });
+        // Match the skill's own text exactly: other rows mention skills in their descriptions.
+        const row = page.locator(ENTITY_ROW).filter({ has: page.getByText(name, { exact: true }) }).first();
+        await row.locator('[aria-label*="Edit"]').first().click({ timeout: 15_000 });
+        await (await SduiForm.attach(page)).delete();
+      });
+      if (result.applied && (await getProfile(voyager)).skills.includes(name)) {
+        throw new Error(`lk: "${name}" is still on the profile; nothing was deleted`);
+      }
+      return result;
+    },
 
     async updateHeadline(headline) {
       if (headline.length > HEADLINE_LIMIT) {

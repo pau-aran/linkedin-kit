@@ -15,10 +15,6 @@ export interface LiClient extends Li {
   close(): Promise<void>;
 }
 
-const notImplemented = (name: string) => async (): Promise<never> => {
-  throw new Error(`li.${name}: not implemented yet`);
-};
-
 export async function createLi(options: LiOptions): Promise<LiClient> {
   const session = await openSession({ headless: true });
   const voyager = createVoyager(session);
@@ -32,8 +28,6 @@ export async function createLi(options: LiOptions): Promise<LiClient> {
     profile: {
       get: () => getProfile(voyager),
       ...writes,
-      addSkill: notImplemented("profile.addSkill"),
-      removeSkill: notImplemented("profile.removeSkill"),
     },
     jobs: createVoyagerJobs(voyager),
     close: () => session.close(),

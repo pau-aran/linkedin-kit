@@ -197,7 +197,7 @@ export class SduiForm {
       throw new Error("lk: the form has no Delete button; LinkedIn may manage this entry");
     }
     await button.click();
-    const confirm = this.page.locator(DIALOG).filter({ hasText: /cannot be undone|are you sure/i }).last();
+    const confirm = this.page.locator(DIALOG).filter({ hasText: /cannot be undone|are you sure|delete .*\?/i }).last();
     await confirm.waitFor({ state: "visible", timeout: 15_000 });
     await confirm.getByRole("button", { name: /^delete\b/i }).last().click();
     await this.page.waitForTimeout(2_500);

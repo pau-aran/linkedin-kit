@@ -16,6 +16,8 @@ beforeAll(async () => {
     "/in/ada-lovelace/edit/forms/position/1": "position.html",
     "/in/ada-lovelace/edit/forms/education/new": "education.html",
     "/in/ada-lovelace/edit/forms/education/1": "education.html",
+    "/in/ada-lovelace/skills/edit/forms/new": "skill.html",
+    "/in/ada-lovelace/details/skills/": "skills.html",
   });
 });
 
@@ -141,11 +143,11 @@ test(
       ...dashProfile,
       included: dashProfile.included.filter((e) => e.entityUrn !== "urn:li:fsd_profilePosition:(ACoAAAexample,1)"),
     };
-    const deletesBefore = browser.deletes();
+    browser.deleted.length = 0;
     const voyager = fixtureVoyager();
     const afterDelete: Voyager = {
       get: async (path, query) =>
-        path === "/identity/dash/profiles" && browser.deletes() > deletesBefore ? withoutEntry : voyager.get(path, query),
+        path === "/identity/dash/profiles" && browser.deleted.length ? withoutEntry : voyager.get(path, query),
     };
     const result = await live(afterDelete).removePosition(1);
     expect(result).toEqual({
@@ -153,7 +155,7 @@ test(
       before: { title: "Engineer", company: "Analytical Engines", start: "2019-03", end: "2021-12" },
       after: null,
     });
-    expect(browser.deletes()).toBe(deletesBefore + 1);
+    expect(browser.deleted).toHaveLength(1);
   },
   BROWSER_TIMEOUT,
 );
@@ -183,3 +185,47 @@ test(
   },
   BROWSER_TIMEOUT,
 );
+
+test(
+  "addSkill picks the skill suggestion and saves",
+  async () => {
+    expect(await live().addSkill("Rust")).toEqual({
+      applied: true,
+      before: ["Kubernetes", "TypeScript"],
+      after: ["Kubernetes", "TypeScript", "Rust"],
+    });
+    expect(browser.saves).toEqual([{ Skill: "Rust" }]);
+  },
+  BROWSER_TIMEOUT,
+);
+
+test("adding a skill that is already there is refused", async () => {
+  await expect(createProfileWrites(dryRunDeps()).addSkill("kubernetes")).rejects.toThrow(/already on the profile/);
+});
+
+test(
+  "removeSkill deletes the row whose own text is the skill, then checks it is gone",
+  async () => {
+    browser.deleted.length = 0;
+    const withoutSkill = {
+      ...dashProfile,
+      included: dashProfile.included.filter((e) => e.name !== "Kubernetes"),
+    };
+    const voyager = fixtureVoyager();
+    const afterDelete: Voyager = {
+      get: async (path, query) =>
+        path === "/identity/dash/profiles" && browser.deleted.length ? withoutSkill : voyager.get(path, query),
+    };
+    expect(await live(afterDelete).removeSkill("Kubernetes")).toEqual({
+      applied: true,
+      before: ["Kubernetes", "TypeScript"],
+      after: ["TypeScript"],
+    });
+    expect(browser.deleted).toEqual(["kubernetes"]);
+  },
+  BROWSER_TIMEOUT,
+);
+
+test("removing a skill that is not there is refused", async () => {
+  await expect(createProfileWrites(dryRunDeps()).removeSkill("Cobol")).rejects.toThrow(/not on the profile/);
+});
