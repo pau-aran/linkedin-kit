@@ -61,6 +61,8 @@ export interface Session {
   context: BrowserContext;
   /** Every LinkedIn call goes through here. */
   queue: <T>(task: () => Promise<T>) => Promise<T>;
+  /** The browser's real user agent, read once at launch. */
+  userAgent: string;
   close(): Promise<void>;
 }
 
@@ -73,9 +75,11 @@ export async function openSession(options: { headless: boolean }): Promise<Sessi
       headless: options.headless,
       viewport: null,
     });
+    const page = context.pages()[0] ?? (await context.newPage());
     return {
       context,
       queue: createQueue(MIN_INTERVAL_MS),
+      userAgent: await page.evaluate(() => navigator.userAgent),
       async close() {
         await context.close();
         release();
@@ -105,7 +109,7 @@ export async function login(): Promise<void> {
 export async function status(): Promise<void> {
   const session = await openSession({ headless: true });
   try {
-    const me = await getMe(createVoyager(session.context, session.queue));
+    const me = await getMe(createVoyager(session));
     console.log(`Signed in as ${me.name} (${me.publicId})`);
   } finally {
     await session.close();

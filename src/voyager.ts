@@ -27,17 +27,19 @@ export function buildQuery(query: VoyagerQuery = {}): string {
   return parts.length ? `?${parts.join("&")}` : "";
 }
 
-const USER_AGENT =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) " +
-  "Chrome/131.0.0.0 Safari/537.36";
+export interface VoyagerSession {
+  context: Pick<BrowserContext, "cookies">;
+  queue: <T>(task: () => Promise<T>) => Promise<T>;
+  /** The browser's own user agent, so requests match the browser that owns the cookies. */
+  userAgent: string;
+}
 
 /**
- * A Voyager client whose every request goes through `queue`. Cookies come from the browser
+ * A Voyager client whose every request goes through the session queue. Cookies come from the browser
  * context; responses never write cookies back, so a redirect to /login cannot clobber `li_at`.
  */
 export function createVoyager(
-  context: Pick<BrowserContext, "cookies">,
-  queue: <T>(task: () => Promise<T>) => Promise<T>,
+  { context, queue, userAgent }: VoyagerSession,
   fetchFn: typeof fetch = fetch,
 ): Voyager {
   return {
@@ -56,7 +58,7 @@ export function createVoyager(
             accept: "application/vnd.linkedin.normalized+json+2.1",
             "x-restli-protocol-version": "2.0.0",
             "x-li-lang": "en_US",
-            "user-agent": USER_AGENT,
+            "user-agent": userAgent,
             referer: `${BASE}/feed/`,
             origin: BASE,
             "accept-language": "en-US,en;q=0.9",

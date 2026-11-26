@@ -19,7 +19,7 @@ const notImplemented = (name: string) => async (): Promise<never> => {
 
 export async function createLi(_options: LiOptions): Promise<LiClient> {
   const session = await openSession({ headless: true });
-  const voyager = createVoyager(session.context, session.queue);
+  const voyager = createVoyager(session);
   return {
     profile: {
       get: () => getProfile(voyager),

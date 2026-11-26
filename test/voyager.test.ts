@@ -2,8 +2,13 @@ import { expect, test } from "bun:test";
 import { buildQuery, createVoyager, getMe } from "../src/voyager.ts";
 import me from "./fixtures/me.json";
 
-const signedIn = { cookies: async () => [cookie("li_at", "token"), cookie("JSESSIONID", '"ajax:42"')] };
 const direct = <T>(task: () => Promise<T>) => task();
+const userAgent = "Mozilla/5.0 (X11; Linux x86_64) Chrome/140.0.0.0";
+const signedIn = {
+  context: { cookies: async () => [cookie("li_at", "token"), cookie("JSESSIONID", '"ajax:42"')] },
+  queue: direct,
+  userAgent,
+};
 
 function cookie(name: string, value: string) {
   return { name, value, domain: ".linkedin.com", path: "/", expires: -1, httpOnly: false, secure: true, sameSite: "None" as const };
@@ -18,24 +23,25 @@ function fakeFetch(response: Response) {
   return { fn, calls };
 }
 
-test("requests carry the session cookies and the csrf token from JSESSIONID", async () => {
+test("requests carry the session cookies, the csrf token from JSESSIONID, and the browser user agent", async () => {
   const { fn, calls } = fakeFetch(Response.json({ ok: 1 }));
-  const voyager = createVoyager(signedIn, direct, fn);
+  const voyager = createVoyager(signedIn, fn);
   expect(await voyager.get("/identity/dash/profiles", { q: "memberIdentity", memberIdentity: "ada" })).toEqual({ ok: 1 });
   expect(calls[0]!.url).toBe("https://www.linkedin.com/voyager/api/identity/dash/profiles?q=memberIdentity&memberIdentity=ada");
   const headers = calls[0]!.init.headers as Record<string, string>;
   expect(headers["csrf-token"]).toBe("ajax:42");
   expect(headers.cookie).toBe('li_at=token; JSESSIONID="ajax:42"');
+  expect(headers["user-agent"]).toBe(userAgent);
 });
 
 test("a redirect means the session was rejected", async () => {
   const { fn } = fakeFetch(new Response(null, { status: 302, headers: { location: "/login" } }));
-  await expect(createVoyager(signedIn, direct, fn).get("/me")).rejects.toThrow(/rejected the session.*lk login/);
+  await expect(createVoyager(signedIn, fn).get("/me")).rejects.toThrow(/rejected the session.*lk login/);
 });
 
 test("without session cookies no request is sent", async () => {
   const { fn, calls } = fakeFetch(Response.json({}));
-  await expect(createVoyager({ cookies: async () => [] }, direct, fn).get("/me")).rejects.toThrow(/not signed in/);
+  await expect(createVoyager({ ...signedIn, context: { cookies: async () => [] } }, fn).get("/me")).rejects.toThrow(/not signed in/);
   expect(calls).toHaveLength(0);
 });
 
@@ -45,5 +51,5 @@ test("Rest.li values stay literal in the query", () => {
 
 test("getMe reads the signed-in member from /me", async () => {
   const { fn } = fakeFetch(Response.json(me));
-  expect(await getMe(createVoyager(signedIn, direct, fn))).toEqual({ publicId: "ada-lovelace", name: "Ada Lovelace" });
+  expect(await getMe(createVoyager(signedIn, fn))).toEqual({ publicId: "ada-lovelace", name: "Ada Lovelace" });
 });
