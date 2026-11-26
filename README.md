@@ -1,10 +1,10 @@
 # linkedin-kit
 
-Terminal + agent toolkit to edit a LinkedIn profile and apply to jobs.
+Terminal + agent toolkit to edit a LinkedIn profile and search for jobs.
 
 The kit gives an agent a typed `li` client for LinkedIn. The agent writes a short TypeScript script against that client, and the `lk` CLI runs it. One script can search jobs, fetch their details in parallel, filter them, and return only what matters, so the agent's context stays small.
 
-This project is at the planning stage. [`PLAN.md`](PLAN.md) has the full plan, and no code exists yet.
+The code-mode runner is implemented, but the live LinkedIn client is still a stub. [`PLAN.md`](PLAN.md) has the full plan.
 
 ## What it will do
 
@@ -29,6 +29,15 @@ The agent does the comparison between your profile and a job itself. A skill fil
 - `lk run <file>` runs an agent script with `li` available and prints the result as JSON. `lk run -` reads the script from standard input.
 - `lk run --write <file>` also applies profile edits. Without `--write`, an edit is a dry run that shows the change.
 - `lk doctor` checks on demand that LinkedIn's pages and endpoints still match what the kit expects.
+
+An `lk run` script is an async function body: use `await` directly and `return`
+a JSON-serializable value. The result goes to stdout (`null` if nothing is
+returned); console output and errors go to stderr. Run only trusted scripts:
+they run locally with your permissions, not in a sandbox.
+
+```sh
+printf 'return (await li.profile.get()).skills;\n' | lk run -
+```
 
 ## Architecture
 
