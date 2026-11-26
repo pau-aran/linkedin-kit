@@ -87,3 +87,66 @@ export async function getMe(voyager: Voyager): Promise<Me> {
     name: [mini.firstName, mini.lastName].filter((s) => typeof s === "string" && s).join(" "),
   };
 }
+
+/* ── Normalized-JSON decoding ─────────────────────────────────────────────── */
+
+/**
+ * `application/vnd.linkedin.normalized+json` flattens an object graph into a
+ * flat `included[]` array where cross-references are URN strings and keys are
+ * prefixed with `*`.
+ */
+export class VoyagerGraph {
+  private byUrn = new Map<string, Record<string, unknown>>();
+  readonly included: Array<Record<string, unknown>>;
+
+  constructor(response: unknown) {
+    const res = (response ?? {}) as { included?: Array<Record<string, unknown>> };
+    this.included = Array.isArray(res.included) ? res.included : [];
+    for (const entity of this.included) {
+      for (const key of ["entityUrn", "dashEntityUrn", "objectUrn"]) {
+        const urn = entity[key];
+        if (typeof urn === "string" && !this.byUrn.has(urn)) this.byUrn.set(urn, entity);
+      }
+    }
+  }
+
+  resolve(urn: unknown): Record<string, unknown> | undefined {
+    return typeof urn === "string" ? this.byUrn.get(urn) : undefined;
+  }
+
+  /** All included entities whose $type ends with the given name. */
+  byType(typeSuffix: string): Array<Record<string, unknown>> {
+    const suffix = typeSuffix.toLowerCase();
+    return this.included.filter((e) => typeof e.$type === "string" && e.$type.toLowerCase().endsWith(suffix));
+  }
+}
+
+/* ── Field access helpers ─────────────────────────────────────────────────── */
+
+/** Safely read a nested path: pick(obj, 'a.b.c'). */
+export function pick(obj: unknown, path: string): unknown {
+  let cur: unknown = obj;
+  for (const seg of path.split(".")) {
+    if (cur === null || typeof cur !== "object") return undefined;
+    cur = (cur as Record<string, unknown>)[seg];
+  }
+  return cur;
+}
+
+/** First non-empty string at any of the paths. LinkedIn wraps many strings as { text: "…" }. */
+export function pickString(obj: unknown, ...paths: string[]): string | undefined {
+  for (const p of paths) {
+    const v = pick(obj, p);
+    const text = typeof v === "string" ? v : pick(v, "text");
+    if (typeof text === "string" && text.trim()) return text.trim();
+  }
+  return undefined;
+}
+
+/** LinkedIn date objects: { year, month } → "YYYY-MM" (or "YYYY"). */
+export function formatLinkedInDate(d: unknown): string | undefined {
+  const year = pick(d, "year");
+  if (typeof year !== "number") return undefined;
+  const month = pick(d, "month");
+  return typeof month === "number" ? `${year}-${String(month).padStart(2, "0")}` : String(year);
+}

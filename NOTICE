@@ -3,3 +3,4 @@ linkedin-kit includes code ported from these projects:
 - Sabari2005/linkedin-mcp-server (https://github.com/Sabari2005/linkedin-mcp-server), MIT License,
   Copyright (c) 2026 Sabari Vadivelan S
   - src/voyager/client.ts, src/auth/session.ts -> src/voyager.ts
+  - src/domains/profile.ts -> src/profile.ts
