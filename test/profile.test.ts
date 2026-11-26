@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { getProfile } from "../src/profile.ts";
+import { getProfile, readProfile } from "../src/profile.ts";
 import type { Voyager } from "../src/voyager.ts";
 import dashProfile from "./fixtures/dash-profile.json";
 import me from "./fixtures/me.json";
@@ -29,4 +29,10 @@ test("profile.get maps my Voyager profile to the Profile type", async () => {
     ],
     skills: ["Kubernetes", "TypeScript"],
   });
+});
+
+test("readProfile gives each entry's LinkedIn id, index for index", async () => {
+  const { positionIds, educationIds } = await readProfile(voyager);
+  expect(positionIds).toEqual(["2", "1"]);
+  expect(educationIds).toEqual(["1"]);
 });
