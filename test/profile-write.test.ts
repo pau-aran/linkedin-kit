@@ -204,7 +204,7 @@ test("adding a skill that is already there is refused", async () => {
 });
 
 test(
-  "removeSkill deletes the row whose own text is the skill, then checks it is gone",
+  "removeSkill deletes through the skill's own edit link, then checks it is gone",
   async () => {
     browser.deleted.length = 0;
     const withoutSkill = {
